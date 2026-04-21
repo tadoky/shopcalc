@@ -49,124 +49,130 @@ const DEFAULTS = {
   ]
 };
 
-addEventListener('fetch', event => {
-  event.respondWith(handleRequest(event.request));
-});
+export default {
+  async fetch(request, env) {
+    const { pathname } = new URL(request.url);
 
-async function handleRequest(request) {
-  const { pathname } = new URL(request.url);
+    // helper to return JSON with CORS
+    const jsonResponse = (obj, opts = {}) => {
+      const headers = new Headers(opts.headers || {});
+      headers.set('Content-Type', 'application/json');
+      headers.set('Access-Control-Allow-Origin', '*');
+      headers.set('Access-Control-Allow-Methods', 'GET,PUT,POST,OPTIONS');
+      headers.set('Access-Control-Allow-Headers', 'Content-Type, x-admin-secret, x-admin-email');
+      return new Response(JSON.stringify(obj), { status: opts.status || 200, headers });
+    };
 
-  if (pathname === '/api/prices') {
-    if (request.method === 'GET') return getPrices();
-    if (request.method === 'PUT') return putPrices(request);
-    if (request.method === 'OPTIONS') return optionsResponse();
-  }
+    const optionsResponse = () =>
+      new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, x-admin-secret, x-admin-email',
+        },
+      });
 
-  if (pathname === '/api/audit') {
-    if (request.method === 'GET') return getAudit(request);
-    if (request.method === 'OPTIONS') return optionsResponse();
-  }
-
-  return new Response('Not found', { status: 404 });
-}
-
-function jsonResponse(obj, opts = {}) {
-  const headers = new Headers(opts.headers || {});
-  headers.set('Content-Type', 'application/json');
-  headers.set('Access-Control-Allow-Origin', '*');
-  headers.set('Access-Control-Allow-Methods', 'GET,PUT,POST,OPTIONS');
-  headers.set('Access-Control-Allow-Headers', 'Content-Type, x-admin-secret, x-admin-email');
-  return new Response(JSON.stringify(obj), { status: opts.status || 200, headers });
-}
-
-function optionsResponse() {
-  return new Response(null, { status: 204, headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS', 'Access-Control-Allow-Headers': 'Content-Type, x-admin-secret, x-admin-email' } });
-}
-
-async function getPrices() {
-  try {
-    const row = await PRICES_DB.prepare('SELECT data FROM prices WHERE id = 1').first();
-    if (row && row.data) return jsonResponse(JSON.parse(row.data));
-  } catch (err) {
-    console.error('D1 read error', err);
-  }
-  return jsonResponse(DEFAULTS);
-}
-
-async function putPrices(request) {
-  const secret = request.headers.get('x-admin-secret') || '';
-  const expected = ADMIN_SECRET || '';
-  if (!expected || secret !== expected) return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
-
-  let body;
-  try {
-    body = await request.json();
-  } catch (err) {
-    return jsonResponse({ error: 'Invalid JSON' }, { status: 400 });
-  }
-
-  // Extract admin identity from common headers (Cloudflare Access or proxy)
-  function extractAdmin(req) {
-    const h = req.headers;
-    const get = (n) => h.get(n) || h.get(n.toLowerCase());
-
-    const candidates = [
-      get('cf-access-authenticated-user'),
-      get('cf-access-authenticated-user-email'),
-      get('cf-access-jwt-assertion'),
-      get('x-admin-email'),
-      get('x-user-email'),
-    ];
-
-    for (const v of candidates) {
-      if (!v) continue;
+    async function getPrices() {
       try {
-        const s = v.trim();
-        if (s.startsWith('{')) {
-          const parsed = JSON.parse(s);
-          if (parsed?.email) return parsed.email;
-        }
-      } catch (e) {
-        // ignore
+        const row = await env.PRICES_DB.prepare('SELECT data FROM prices WHERE id = 1').first();
+        if (row && row.data) return jsonResponse(JSON.parse(row.data));
+      } catch (err) {
+        console.error('D1 read error', err);
       }
-
-      const m = v.match(/email=([^,;\s]+)/i);
-      if (m) return decodeURIComponent(m[1]);
-
-      if (v.includes('@')) return v;
-      return v;
+      return jsonResponse(DEFAULTS);
     }
 
-    return 'unknown';
+    async function putPrices(request) {
+      const secret = request.headers.get('x-admin-secret') || '';
+      const expected = env.ADMIN_SECRET || '';
+      if (!expected || secret !== expected) return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
+
+      let body;
+      try {
+        body = await request.json();
+      } catch (err) {
+        return jsonResponse({ error: 'Invalid JSON' }, { status: 400 });
+      }
+
+      function extractAdmin(req) {
+        const h = req.headers;
+        const get = (n) => h.get(n) || h.get(n.toLowerCase());
+
+        const candidates = [
+          get('cf-access-authenticated-user'),
+          get('cf-access-authenticated-user-email'),
+          get('cf-access-jwt-assertion'),
+          get('x-admin-email'),
+          get('x-user-email'),
+        ];
+
+        for (const v of candidates) {
+          if (!v) continue;
+          try {
+            const s = v.trim();
+            if (s.startsWith('{')) {
+              const parsed = JSON.parse(s);
+              if (parsed?.email) return parsed.email;
+            }
+          } catch (e) {}
+
+          const m = v.match(/email=([^,;\s]+)/i);
+          if (m) return decodeURIComponent(m[1]);
+          if (v.includes('@')) return v;
+          return v;
+        }
+
+        return 'unknown';
+      }
+
+      const admin = extractAdmin(request);
+
+      try {
+        const beforeRow = await env.PRICES_DB.prepare('SELECT data FROM prices WHERE id = 1').first();
+        const before = beforeRow?.data || null;
+
+        await env.PRICES_DB.prepare('INSERT OR REPLACE INTO prices (id, data, updated_at) VALUES (1, ?, datetime("now"))').run(JSON.stringify(body));
+
+        await env.PRICES_DB.prepare('INSERT INTO audit_logs (admin, before_data, after_data, created_at) VALUES (?, ?, ?, datetime("now"))').run(admin, before, JSON.stringify(body));
+
+        return jsonResponse({ ok: true });
+      } catch (err) {
+        console.error('D1 write error', err);
+        return jsonResponse({ error: 'Storage error' }, { status: 500 });
+      }
+    }
+
+    async function getAudit(request) {
+      const secret = request.headers.get('x-admin-secret') || '';
+      const expected = env.ADMIN_SECRET || '';
+      if (!expected || secret !== expected) return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
+
+      try {
+        const rows = await env.PRICES_DB.prepare('SELECT id, admin, before_data, after_data, created_at FROM audit_logs ORDER BY id DESC LIMIT 100').all();
+        return jsonResponse({ rows: rows?.results || [] });
+      } catch (err) {
+        console.error('D1 read audit error', err);
+        return jsonResponse({ error: 'Storage error' }, { status: 500 });
+      }
+    }
+
+    try {
+      if (pathname === '/api/prices') {
+        if (request.method === 'GET') return await getPrices();
+        if (request.method === 'PUT') return await putPrices(request);
+        if (request.method === 'OPTIONS') return optionsResponse();
+      }
+
+      if (pathname === '/api/audit') {
+        if (request.method === 'GET') return await getAudit(request);
+        if (request.method === 'OPTIONS') return optionsResponse();
+      }
+
+      return new Response('Not found', { status: 404 });
+    } catch (e) {
+      console.error('Unhandled error', e);
+      return jsonResponse({ error: 'Internal' }, { status: 500 });
+    }
   }
-
-  const admin = extractAdmin(request);
-
-  try {
-    const beforeRow = await PRICES_DB.prepare('SELECT data FROM prices WHERE id = 1').first();
-    const before = beforeRow?.data || null;
-
-    await PRICES_DB.prepare('INSERT OR REPLACE INTO prices (id, data, updated_at) VALUES (1, ?, datetime("now"))').run(JSON.stringify(body));
-
-    await PRICES_DB.prepare('INSERT INTO audit_logs (admin, before_data, after_data, created_at) VALUES (?, ?, ?, datetime("now"))').run(admin, before, JSON.stringify(body));
-
-    return jsonResponse({ ok: true });
-  } catch (err) {
-    console.error('D1 write error', err);
-    return jsonResponse({ error: 'Storage error' }, { status: 500 });
-  }
-}
-
-async function getAudit(request) {
-  const secret = request.headers.get('x-admin-secret') || '';
-  const expected = ADMIN_SECRET || '';
-  if (!expected || secret !== expected) return jsonResponse({ error: 'Unauthorized' }, { status: 401 });
-
-  try {
-    const rows = await PRICES_DB.prepare('SELECT id, admin, before_data, after_data, created_at FROM audit_logs ORDER BY id DESC LIMIT 100').all();
-    return jsonResponse({ rows: rows?.results || [] });
-  } catch (err) {
-    console.error('D1 read audit error', err);
-    return jsonResponse({ error: 'Storage error' }, { status: 500 });
-  }
-}
+};

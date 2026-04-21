@@ -930,23 +930,29 @@
       }
 
       async function tryFetchServerPrices() {
-        try {
-          const res = await fetch('/api/prices', { cache: 'no-store' });
-          if (!res.ok) throw new Error('no prices');
-          const data = await res.json();
+        const workerUrl = 'https://garage-prices-api.tadokys.workers.dev/api/prices';
 
+        async function applyData(data) {
           if (data.basePrices) basePrices = data.basePrices;
           if (data.partPrices) partPrices = data.partPrices;
           if (data.partsList) partsList = data.partsList;
           if (data.extrasList) extrasList = data.extrasList;
-
-          // Rebuild parts and extras UI with server-supplied lists/prices
           renderParts();
           renderExtras();
           showToast('Prices loaded from server');
           calculate();
+        }
+
+        // Try same-origin first, then fall back to the worker URL
+        try {
+          let res = await fetch('/api/prices', { cache: 'no-store' });
+          if (!res.ok) {
+            res = await fetch(workerUrl, { cache: 'no-store' });
+          }
+          if (!res.ok) throw new Error('no prices');
+          const data = await res.json();
+          await applyData(data);
         } catch (err) {
-          // Keep embedded defaults, silently continue
           console.warn('Failed to fetch server prices:', err);
           showToast('Using local prices');
         }
