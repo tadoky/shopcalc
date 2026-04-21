@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Harmony Repair Billing</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --card: #121a2b;
+        --card2: #0f172a;
+        --accent: #6366f1;
+        --accent2: #22c55e;
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #1f2a44;
+        --danger: #ef4444;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, system-ui, -apple-system, Arial, sans-serif;
+        background: linear-gradient(180deg, #0b1220, #0b1220 40%, #0a1020);
+        color: var(--text);
+        min-height: 100vh;
+      }
+
+      .wrap {
+        max-width: 1300px;
+        margin: 24px auto;
+        padding: 0 16px 24px;
+      }
+
+      .header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .titleGroup {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .title {
+        font-size: 28px;
+        font-weight: 800;
+        letter-spacing: 0.3px;
+      }
+
+      .subtitle {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .badge {
+        background: rgba(99, 102, 241, 0.15);
+        border: 1px solid rgba(99, 102, 241, 0.3);
+        color: #c7d2fe;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 340px;
+        gap: 16px;
+        align-items: start;
+      }
+
+      @media (max-width: 1000px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .totalCard {
+          position: static !important;
+        }
+      }
+
+      .card {
+        background: linear-gradient(180deg, var(--card), var(--card2));
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      }
+
+      .card .body {
+        padding: 14px;
+      }
+
+      .card h3 {
+        margin: 0;
+        font-size: 16px;
+        color: #cbd5f5;
+      }
+
+      .sectionHead {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .sectionTotal {
+        color: #c7d2fe;
+        font-weight: 700;
+        font-size: 13px;
+        background: rgba(99, 102, 241, 0.12);
+        border: 1px solid rgba(99, 102, 241, 0.25);
+        padding: 5px 10px;
+        border-radius: 999px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+        flex-wrap: wrap;
+      }
+
+      .tab-btn {
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--muted);
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        transition: all 0.2s;
+      }
+
+      .tab-btn:hover {
+        border-color: rgba(99, 102, 241, 0.55);
+        color: var(--text);
+      }
+
+      .tab-btn.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+
+      .tab-content {
+        display: none;
+      }
+
+      .tab-content.active {
+        display: block;
+      }
+
+      label {
+        font-size: 13px;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      select,
+      input {
+        width: 100%;
+        background: #0b1220;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 8px 10px;
+        border-radius: 10px;
+        outline: none;
+        transition: 0.2s;
+      }
+
+      select:focus,
+      input:focus {
+        border-color: var(--accent);
+        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+      }
+
+      select:disabled {
+        opacity: 0.55;
+        cursor: not-allowed;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .divider {
+        height: 1px;
+        background: var(--border);
+        margin: 10px 0;
+      }
+
+      .btn {
+        cursor: pointer;
+        border: none;
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-weight: 700;
+        transition: 0.2s;
+      }
+
+      .btn:hover {
+        opacity: 0.92;
+      }
+
+      .btn.primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      .btn.ghost {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text);
+      }
+
+      .btn.danger {
+        background: var(--danger);
+        color: white;
+      }
+
+      .btn.small {
+        min-height: 42px;
+        padding: 10px 16px;
+        font-size: 12px;
+        border-radius: 12px;
+      }
+
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 8px;
+      }
+
+      .totalCard {
+        position: sticky;
+        top: 12px;
+        height: fit-content;
+      }
+
+      .totalBox {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .totalBig {
+        font-size: 40px;
+        font-weight: 900;
+        letter-spacing: 0.5px;
+        line-height: 1;
+      }
+
+      .breakdown {
+        font-size: 14px;
+        color: var(--muted);
+        line-height: 1.7;
+        max-height: 520px;
+        overflow: auto;
+        white-space: pre-wrap;
+        padding-right: 4px;
+      }
+
+      .itemRow {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(220px, 0.85fr);
+        gap: 18px;
+        align-items: center;
+        margin: 10px 0;
+        padding: 16px 18px;
+        border-radius: 14px;
+        border: 1px solid rgba(31, 42, 68, 0.85);
+        background: rgba(10, 16, 32, 0.55);
+        transition: 0.2s;
+      }
+
+      .itemRow.active {
+        border-color: rgba(99, 102, 241, 0.8);
+        background: rgba(99, 102, 241, 0.08);
+      }
+
+      .controlGrid {
+        display: grid;
+        gap: 12px;
+        align-items: end;
+        min-width: 0;
+        justify-self: stretch;
+      }
+
+      .upgradeControls {
+        grid-template-columns: minmax(0, 180px);
+        justify-content: end;
+      }
+
+      .partControls {
+        grid-template-columns: minmax(0, 96px);
+        justify-content: end;
+      }
+
+      .extraControls {
+        grid-template-columns: minmax(0, 96px);
+        justify-content: end;
+      }
+
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+      }
+
+      .rowInfo,
+      .nameBox,
+      .upgradeMeta {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .rowInfo span,
+      .nameBox span,
+      .upgradeMeta span {
+        font-size: 15px;
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .rowInfo strong,
+      .upgradeMeta strong {
+        font-size: 16px;
+        line-height: 1.2;
+      }
+
+      .rowInfo small,
+      .nameBox small,
+      .upgradeMeta small {
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.5;
+      }
+
+      .priceChip {
+        font-size: 11px;
+        color: #c7d2fe;
+        background: rgba(99, 102, 241, 0.14);
+        border: 1px solid rgba(99, 102, 241, 0.28);
+        padding: 2px 8px;
+        border-radius: 999px;
+        white-space: nowrap;
+      }
+
+      .checkboxRow {
+        display: block;
+      }
+
+      .extraQtyWrap {
+        max-width: 96px;
+      }
+
+      .extraToggle {
+        width: 100%;
+        border: 1px solid var(--border);
+        background: #0b1220;
+        color: var(--text);
+        padding: 10px 12px;
+        border-radius: 10px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: 0.2s;
+        text-align: left;
+      }
+
+      .extraToggle:hover {
+        border-color: rgba(99, 102, 241, 0.55);
+      }
+
+      .extraToggle.active {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: white;
+      }
+
+      .extraSelect {
+        width: 100%;
+        border: 1px solid rgba(31, 42, 68, 0.95);
+        background: rgba(11, 18, 32, 0.88);
+        color: var(--text);
+        padding: 12px 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: 0.2s;
+        text-align: left;
+      }
+
+      .extraSelect:hover {
+        border-color: rgba(99, 102, 241, 0.55);
+      }
+
+      .extraSelect.active {
+        background: rgba(99, 102, 241, 0.16);
+        border-color: rgba(99, 102, 241, 0.85);
+        box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.18) inset;
+      }
+
+      .extraSelectTitle {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .extraSelectTitle strong {
+        font-size: 15px;
+        line-height: 1.25;
+      }
+
+      .extraRow {
+        grid-template-columns: minmax(0, 1fr) 96px;
+        gap: 12px;
+        padding: 12px 14px;
+      }
+
+      #upgradeRow {
+        grid-template-columns: minmax(0, 1fr) 180px;
+        gap: 12px;
+        padding: 12px 14px;
+      }
+
+      .partRow {
+        grid-template-columns: minmax(0, 1fr) 96px;
+        gap: 12px;
+        padding: 12px 14px;
+      }
+
+      #upgradeRow .controlGrid,
+      .partRow .controlGrid,
+      .extraRow .controlGrid {
+        justify-self: end;
+      }
+
+      #upgradeRow .field,
+      .partRow .field,
+      .extraRow .field {
+        gap: 0;
+      }
+
+      #tier,
+      .qty,
+      .extraRow .extraQty {
+        min-height: 44px;
+      }
+
+      .car-switcher {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+
+      .car-tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 4px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: rgba(18, 26, 43, 0.88);
+      }
+
+      .car-pill {
+        padding: 10px 16px;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        cursor: pointer;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 700;
+        min-width: 110px;
+        transition: 0.2s;
+      }
+
+      .car-pill:hover {
+        border-color: rgba(99, 102, 241, 0.55);
+        color: var(--text);
+      }
+
+      .car-pill.active {
+        background: var(--accent);
+        color: white;
+        border-color: var(--accent);
+      }
+
+      .carNameBar {
+        margin-bottom: 12px;
+      }
+
+      .carDetailsGrid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+        gap: 12px;
+        align-items: end;
+      }
+
+      .sectionNote {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .rowInfoHeader {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        justify-content: space-between;
+        flex-wrap: wrap;
+      }
+
+      .sharedClassStatus {
+        color: #cbd5f5;
+        font-weight: 600;
+      }
+
+      .partRow .controlGrid,
+      .extraRow .controlGrid {
+        align-items: center;
+      }
+
+      @media (max-width: 700px) {
+        .itemRow {
+          grid-template-columns: 1fr;
+        }
+
+        .upgradeControls,
+        .partControls,
+        .extraControls {
+          grid-template-columns: 1fr;
+        }
+
+        .carDetailsGrid {
+          grid-template-columns: 1fr;
+        }
+
+        .nameBox,
+        .upgradeMeta {
+          min-width: 0;
+        }
+
+        .car-pill {
+          min-width: 100px;
+        }
+      }
+
+      .toast {
+        position: fixed;
+        bottom: 16px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: #0b1220;
+        border: 1px solid var(--border);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+        opacity: 0;
+        pointer-events: none;
+        transition: 0.2s;
+        z-index: 50;
+        font-size: 13px;
+      }
+
+      .toast.show {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="header">
+        <div class="titleGroup">
+          <div class="title">Harmony Repair Billing</div>
+          <div class="subtitle">
+            Paleto, Los santos | Owner: Moose
+          </div>
+        </div>
+        <div class="badge">Qty dropdowns 1-10</div>
+      </div>
+
+      <form id="billingForm" class="billing-form" autocomplete="off">
+        <div class="grid">
+          <div>
+            <div class="car-switcher">
+              <div id="carSwitcher" class="car-tabs" role="tablist" aria-label="Cars"></div>
+              <button type="button" class="btn primary small" onclick="addCar()">
+                Add Car
+              </button>
+              <button
+                type="button"
+                class="btn ghost small"
+                onclick="duplicateCar()"
+              >
+                Duplicate
+              </button>
+              <button
+                type="button"
+                class="btn danger small"
+                onclick="deleteCar()"
+              >
+                Delete
+              </button>
+            </div>
+
+            <div class="carNameBar card">
+              <div class="body">
+                <div class="carDetailsGrid">
+                  <div class="field">
+                    <label for="carName">Car name</label>
+                    <input
+                      type="text"
+                      id="carName"
+                      placeholder="Enter car name..."
+                    />
+                  </div>
+                  <div class="field">
+                    <label for="vehicleClass">Class</label>
+                    <select id="vehicleClass">
+                      <option value="none">None</option>
+                      <option value="S">S</option>
+                      <option value="A">A</option>
+                      <option value="B">B</option>
+                      <option value="C">C</option>
+                      <option value="D">D</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="muted sectionNote" id="sharedClassNote">
+                  The selected class is shared across base upgrades and all parts for this car.
+                </div>
+              </div>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Billing sections">
+              <button
+                type="button"
+                id="tabBtnUpgrades"
+                class="tab-btn active"
+                onclick="openTab(event, 'upgradesTab')"
+              >
+                Upgrades
+              </button>
+              <button
+                type="button"
+                id="tabBtnParts"
+                class="tab-btn"
+                onclick="openTab(event, 'partsTab')"
+              >
+                Parts
+              </button>
+              <button
+                type="button"
+                id="tabBtnExtras"
+                class="tab-btn"
+                onclick="openTab(event, 'extrasTab')"
+              >
+                Extras
+              </button>
+            </div>
+
+            <div id="upgradesTab" class="tab-content active">
+              <div class="card">
+                <div class="body">
+                  <div class="sectionHead">
+                    <h3>Upgrades</h3>
+                    <div class="sectionTotal" id="upgradeSubtotal">$0</div>
+                  </div>
+
+                  <div class="itemRow" id="upgradeRow">
+                    <div class="rowInfo upgradeMeta">
+                      <div class="rowInfoHeader">
+                        <strong>Base Upgrade</strong>
+                        <span class="priceChip" id="basePriceHint">
+                          Pick a tier to price
+                        </span>
+                      </div>
+                      <small id="upgradeMetaText">Choose the shared class above, then pick a tier.</small>
+                    </div>
+
+                    <div class="controlGrid upgradeControls">
+                      <div class="field">
+                        <select id="tier" aria-label="Upgrade tier">
+                          <option value="none">None</option>
+                          <option value="Tier 1">Tier 1</option>
+                          <option value="Tier 2">Tier 2</option>
+                          <option value="Tier 3">Tier 3</option>
+                          <option value="Full Upgrades">
+                            Full Upgrades
+                          </option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="partsTab" class="tab-content">
+              <div class="card">
+                <div class="body">
+                  <div class="sectionHead">
+                    <h3>Parts</h3>
+                    <div class="sectionTotal" id="partsSubtotal">$0</div>
+                  </div>
+                  <div id="parts"></div>
+                </div>
+              </div>
+            </div>
+
+            <div id="extrasTab" class="tab-content">
+              <div class="card">
+                <div class="body">
+                  <div class="sectionHead">
+                    <h3>Extras</h3>
+                    <div class="sectionTotal" id="extrasSubtotal">$0</div>
+                  </div>
+                  <div id="extras"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card totalCard">
+            <div class="body totalBox">
+              <h3>Summary</h3>
+              <div class="totalBig">
+                $<span id="total">0</span>
+              </div>
+              <div class="muted">Updates automatically as you select items</div>
+
+              <div class="divider"></div>
+              <div id="breakdown" class="breakdown">No items selected</div>
+
+              <div class="actions">
+                <button type="button" class="btn primary" onclick="copySummary()">
+                  Copy Summary
+                </button>
+                <button type="button" class="btn ghost" onclick="resetAll()">
+                  Reset
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+      const STORAGE_KEY = "harmonyGarageBilling.v4";
+
+      const basePrices = {
+        S: {
+          "Tier 1": 12850,
+          "Tier 2": 14950,
+          "Tier 3": 17200,
+          "Full Upgrades": 18250,
+        },
+        A: {
+          "Tier 1": 10450,
+          "Tier 2": 12550,
+          "Tier 3": 14750,
+          "Full Upgrades": 15800,
+        },
+        B: {
+          "Tier 1": 8050,
+          "Tier 2": 10700,
+          "Tier 3": 12250,
+          "Full Upgrades": 13300,
+        },
+        C: {
+          "Tier 1": 5650,
+          "Tier 2": 7750,
+          "Tier 3": 10000,
+          "Full Upgrades": 11050,
+        },
+        D: {
+          "Tier 1": 3250,
+          "Tier 2": 5350,
+          "Tier 3": 7550,
+          "Full Upgrades": 8650,
+        },
+      };
+
+      const partPrices = {
+        Hoods: { S: 700, A: 600, B: 500, C: 400, D: 300 },
+        "Roll Cage": { S: 800, A: 700, B: 600, C: 500, D: 400 },
+        Exhaust: { S: 900, A: 800, B: 700, C: 600, D: 500 },
+        Bumpers: { S: 600, A: 500, B: 400, C: 300, D: 200 },
+        Skirts: { S: 600, A: 500, B: 400, C: 300, D: 200 },
+        Seats: { S: 800, A: 700, B: 500, C: 400, D: 200 },
+        Spoilers: { S: 600, A: 500, B: 400, C: 300, D: 200 },
+        "Xenon Headlights": { S: 600, A: 500, B: 400, C: 300, D: 300 },
+        Rims: { S: 600, A: 500, B: 400, C: 300, D: 200 },
+        Interior: { S: 600, A: 500, B: 400, C: 300, D: 200 },
+        Exterior: { S: 600, A: 500, B: 400, C: 300, D: 200 },
+        Roof: { S: 700, A: 600, B: 500, C: 400, D: 300 },
+      };
+
+      const partsList = [
+        "Hoods",
+        "Roll Cage",
+        "Exhaust",
+        "Bumpers",
+        "Skirts",
+        "Seats",
+        "Spoilers",
+        "Xenon Headlights",
+        "Rims",
+        "Interior",
+        "Exterior",
+        "Roof",
+      ];
+
+      const extrasList = [
+        { name: "Full Service Repair", price: 1000 },
+        { name: "Cleaning kits (5 for $1,000)", price: 1000 },
+        { name: "Window tint", price: 200 },
+        { name: "Horn", price: 300 },
+        { name: "Spray Can", price: 100 },
+        { name: "Flame kit", price: 2500 },
+        { name: "Livery Roll", price: 300 },
+        { name: "Plates", price: 100 },
+        { name: "Race Harnesses", price: 7000 },
+      ];
+
+      function formatMoney(value) {
+        return `$${Number(value || 0).toLocaleString()}`;
+      }
+
+      function qtyOptions(selected = 1, includeNone = false) {
+        const options = [];
+
+        if (includeNone) {
+          options.push(
+            `<option value="0" ${selected === 0 ? "selected" : ""}>None</option>`
+          );
+        }
+
+        options.push(
+          ...Array.from({ length: 10 }, (_, i) => i + 1).map(
+            (n) =>
+              `<option value="${n}" ${
+                n === selected ? "selected" : ""
+              }>${n}</option>`
+          )
+        );
+
+        return options.join("");
+      }
+
+      function defaultCar() {
+        return {
+          name: "",
+          cls: "none",
+          tier: "none",
+          parts: Array.from({ length: partsList.length }, () => ({
+            qty: 0,
+          })),
+          extras: Array.from({ length: extrasList.length }, () => ({
+            checked: false,
+            qty: 1,
+          })),
+        };
+      }
+
+      function deepClone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      const cars = [defaultCar()];
+      let currentCar = 0;
+      let activeTab = "upgradesTab";
+      let toastTimer = null;
+      let grandTotal = 0;
+
+      const partsDiv = document.getElementById("parts");
+      partsList.forEach((part, index) => {
+        const div = document.createElement("div");
+        div.className = "itemRow partRow";
+        div.dataset.index = index;
+
+        div.innerHTML = `
+          <div class="rowInfo nameBox">
+            <div class="rowInfoHeader">
+              <strong>${part}</strong>
+              <span class="priceChip partPrice" data-index="${index}">
+                Select class above
+              </span>
+            </div>
+            <small>Use the shared class above, then choose a quantity</small>
+          </div>
+
+          <div class="controlGrid partControls">
+            <div class="field">
+              <select class="qty" data-index="${index}" aria-label="Part quantity" disabled>
+                ${qtyOptions(0, true)}
+              </select>
+            </div>
+          </div>
+        `;
+
+        partsDiv.appendChild(div);
+      });
+
+      const extrasDiv = document.getElementById("extras");
+      extrasList.forEach((extra, index) => {
+        const div = document.createElement("div");
+        div.className = "itemRow extraRow";
+        div.dataset.index = index;
+
+        div.innerHTML = `
+          <div class="rowInfo nameBox">
+            <button
+              type="button"
+              class="extraSelect"
+              data-index="${index}"
+              data-name="${extra.name}"
+              aria-pressed="false"
+            >
+              <span class="extraSelectTitle">
+                <strong>${extra.name}</strong>
+                <span class="priceChip">
+                  ${formatMoney(extra.price)} each
+                </span>
+              </span>
+            </button>
+          </div>
+
+          <div class="controlGrid extraControls">
+            <div class="field extraQtyWrap">
+              <select class="extraQty" data-index="${index}" aria-label="Extra quantity" disabled>
+                ${qtyOptions(1)}
+              </select>
+            </div>
+          </div>
+        `;
+
+        extrasDiv.appendChild(div);
+      });
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => {
+          toast.classList.remove("show");
+        }, 1800);
+      }
+
+      function isValidTabName(tabName) {
+        return ["upgradesTab", "partsTab", "extrasTab"].includes(tabName);
+      }
+
+      function loadState() {
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return;
+
+          const data = JSON.parse(raw);
+
+          if (Array.isArray(data.cars) && data.cars.length) {
+            cars.length = 0;
+
+            data.cars.forEach((car) => {
+              const base = defaultCar();
+
+              cars.push({
+                name: car.name || "",
+                cls: car.cls || "none",
+                tier: car.tier || "none",
+                parts: partsList.map((_, i) => {
+                  const savedPart = car.parts?.[i] || {};
+                  const hasLegacyClass = Object.prototype.hasOwnProperty.call(
+                    savedPart,
+                    "cls"
+                  );
+                  const savedQty = Number(savedPart.qty);
+
+                  return {
+                    qty: hasLegacyClass
+                      ? savedPart.cls && savedPart.cls !== "none"
+                        ? savedQty > 0
+                          ? savedQty
+                          : 1
+                        : 0
+                      : savedQty > 0
+                        ? savedQty
+                        : 0,
+                  };
+                }),
+                extras: extrasList.map((_, i) => ({
+                  checked: Boolean(car.extras?.[i]?.checked),
+                  qty: Number(car.extras?.[i]?.qty) || 1,
+                })),
+              });
+            });
+          }
+
+          currentCar =
+            Number.isInteger(data.currentCar) &&
+            data.currentCar >= 0 &&
+            data.currentCar < cars.length
+              ? data.currentCar
+              : 0;
+
+          activeTab = isValidTabName(data.activeTab)
+            ? data.activeTab
+            : "upgradesTab";
+        } catch {
+          // Ignore bad saved data
+        }
+      }
+
+      function saveState() {
+        try {
+          localStorage.setItem(
+            STORAGE_KEY,
+            JSON.stringify({
+              cars,
+              currentCar,
+              activeTab,
+            })
+          );
+        } catch {
+          // Ignore storage errors
+        }
+      }
+
+      function getCarName(car, index) {
+        return car.name || `Car ${index + 1}`;
+      }
+
+      function getCarTotals(car) {
+        let total = 0;
+        let upgrades = 0;
+        let parts = 0;
+        let extras = 0;
+        const lines = [];
+
+        if (car.cls !== "none" && car.tier !== "none") {
+          const val = basePrices[car.cls]?.[car.tier] || 0;
+          total += val;
+          upgrades += val;
+          lines.push(`${car.cls} ${car.tier} = ${formatMoney(val)}`);
+        }
+
+        car.parts.forEach((part, i) => {
+          if (car.cls !== "none" && part.qty > 0) {
+            const val = (partPrices[partsList[i]]?.[car.cls] || 0) * part.qty;
+            total += val;
+            parts += val;
+            lines.push(
+              `${part.qty}x ${partsList[i]} (${car.cls}) = ${formatMoney(val)}`
+            );
+          }
+        });
+
+        car.extras.forEach((extra, i) => {
+          if (extra.checked && extra.qty > 0) {
+            const val = extrasList[i].price * extra.qty;
+            total += val;
+            extras += val;
+            lines.push(
+              `${extra.qty}x ${extrasList[i].name} = ${formatMoney(val)}`
+            );
+          }
+        });
+
+        return { total, upgrades, parts, extras, lines };
+      }
+
+      function renderCarSwitcher() {
+        const box = document.getElementById("carSwitcher");
+        box.innerHTML = "";
+
+        cars.forEach((car, idx) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "car-pill" + (idx === currentCar ? " active" : "");
+          btn.setAttribute("role", "tab");
+          btn.setAttribute("aria-selected", String(idx === currentCar));
+          btn.textContent = getCarName(car, idx);
+          btn.onclick = () => selectCar(idx);
+          box.appendChild(btn);
+        });
+      }
+
+      function syncRowUI() {
+        const car = cars[currentCar];
+
+        document.querySelectorAll(".partRow").forEach((row) => {
+          const index = Number(row.dataset.index);
+          const part = car.parts[index];
+          const qty = row.querySelector(".qty");
+          const priceChip = row.querySelector(".partPrice");
+
+          qty.value = part.qty;
+          qty.disabled = car.cls === "none";
+          row.classList.toggle("active", car.cls !== "none" && part.qty > 0);
+
+          if (car.cls === "none") {
+            priceChip.textContent = "Select class above";
+          } else {
+            const price = partPrices[partsList[index]]?.[car.cls] || 0;
+            priceChip.textContent = `${formatMoney(price)} each`;
+          }
+        });
+
+        document.querySelectorAll(".extraRow").forEach((row) => {
+          const index = Number(row.dataset.index);
+          const extra = car.extras[index];
+          const toggle = row.querySelector(".extraSelect");
+          const qty = row.querySelector(".extraQty");
+
+          qty.value = extra.qty;
+          qty.disabled = !extra.checked;
+          row.classList.toggle("active", extra.checked);
+          toggle.classList.toggle("active", extra.checked);
+          toggle.setAttribute("aria-pressed", String(extra.checked));
+        });
+
+        document.getElementById("carName").value = car.name;
+        document.getElementById("vehicleClass").value = car.cls;
+        document.getElementById("tier").value = car.tier;
+
+        const sharedClassNote = document.getElementById("sharedClassNote");
+        const upgradeRow = document.getElementById("upgradeRow");
+        const upgradeHint = document.getElementById("basePriceHint");
+        const upgradeMetaText = document.getElementById("upgradeMetaText");
+
+        if (car.cls === "none") {
+          sharedClassNote.innerHTML =
+            "The selected class is shared across base upgrades and all parts for this car.";
+        } else {
+          sharedClassNote.innerHTML =
+            `Selected class: <span class="sharedClassStatus">${car.cls}</span>. This applies to base upgrades and all parts for this car.`;
+        }
+
+        if (car.cls === "none") {
+          upgradeRow.classList.remove("active");
+          upgradeHint.textContent = "Pick a tier to price";
+          upgradeMetaText.textContent =
+            "Choose the shared class above, then pick a tier.";
+        } else if (car.tier === "none") {
+          upgradeRow.classList.remove("active");
+          upgradeHint.textContent = "Pick a tier to price";
+          upgradeMetaText.textContent =
+            "Choose the shared class above, then pick a tier.";
+        } else {
+          const unit = basePrices[car.cls]?.[car.tier] || 0;
+          upgradeRow.classList.add("active");
+          upgradeHint.textContent = `${formatMoney(unit)} each`;
+          upgradeMetaText.textContent =
+            "Choose the shared class above, then pick a tier.";
+        }
+      }
+
+      function saveCurrentCarFromUI() {
+        const car = cars[currentCar];
+
+        car.name = document.getElementById("carName").value.trim();
+        car.cls = document.getElementById("vehicleClass").value;
+        car.tier = document.getElementById("tier").value;
+
+        document.querySelectorAll(".qty").forEach((select) => {
+          const i = Number(select.dataset.index);
+          car.parts[i].qty = Number(select.value) || 0;
+        });
+
+        document.querySelectorAll(".extraSelect").forEach((toggle) => {
+          const i = Number(toggle.dataset.index);
+          const qtyInput = document.querySelector(
+            `.extraQty[data-index='${i}']`
+          );
+
+          car.extras[i].checked = toggle.getAttribute("aria-pressed") === "true";
+          car.extras[i].qty = Number(qtyInput.value) || 1;
+        });
+      }
+
+      function loadCarToUI(index) {
+        const car = cars[index];
+        document.getElementById("carName").value = car.name;
+        document.getElementById("vehicleClass").value = car.cls;
+        document.getElementById("tier").value = car.tier;
+        syncRowUI();
+      }
+
+      function setActiveTab(tabName) {
+        const safeTabName = isValidTabName(tabName)
+          ? tabName
+          : "upgradesTab";
+
+        activeTab = safeTabName;
+
+        document.querySelectorAll(".tab-content").forEach((content) => {
+          content.classList.remove("active");
+        });
+
+        document.querySelectorAll(".tab-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        document.getElementById(safeTabName).classList.add("active");
+
+        const btnMap = {
+          upgradesTab: "tabBtnUpgrades",
+          partsTab: "tabBtnParts",
+          extrasTab: "tabBtnExtras",
+        };
+
+        document.getElementById(btnMap[safeTabName]).classList.add("active");
+      }
+
+      function openTab(evt, tabName) {
+        setActiveTab(tabName);
+        if (evt?.currentTarget) {
+          evt.currentTarget.classList.add("active");
+        }
+        saveState();
+      }
+
+      function selectCar(index) {
+        saveCurrentCarFromUI();
+        currentCar = index;
+        loadCarToUI(index);
+        renderCarSwitcher();
+        calculate();
+      }
+
+      function addCar() {
+        saveCurrentCarFromUI();
+        cars.push(defaultCar());
+        currentCar = cars.length - 1;
+        loadCarToUI(currentCar);
+        renderCarSwitcher();
+        calculate();
+        showToast("Car added");
+      }
+
+      function duplicateCar() {
+        saveCurrentCarFromUI();
+        const copy = deepClone(cars[currentCar]);
+        copy.name = copy.name ? `${copy.name} Copy` : "";
+        cars.push(copy);
+        currentCar = cars.length - 1;
+        loadCarToUI(currentCar);
+        renderCarSwitcher();
+        calculate();
+        showToast("Car duplicated");
+      }
+
+      function deleteCar() {
+        if (cars.length === 1) {
+          showToast("You need at least one car");
+          return;
+        }
+
+        const name = getCarName(cars[currentCar], currentCar);
+        if (!confirm(`Delete ${name}?`)) return;
+
+        cars.splice(currentCar, 1);
+        currentCar = Math.max(0, currentCar - 1);
+        loadCarToUI(currentCar);
+        renderCarSwitcher();
+        calculate();
+        showToast("Car deleted");
+      }
+
+      function calculate() {
+        saveCurrentCarFromUI();
+
+        let total = 0;
+        const lines = [];
+        let currentTotals = {
+          upgrades: 0,
+          parts: 0,
+          extras: 0,
+        };
+
+        cars.forEach((car, carIndex) => {
+          const carTotals = getCarTotals(car);
+          total += carTotals.total;
+
+          if (carIndex === currentCar) {
+            currentTotals = {
+              upgrades: carTotals.upgrades,
+              parts: carTotals.parts,
+              extras: carTotals.extras,
+            };
+          }
+
+          if (carTotals.lines.length) {
+            lines.push(`${getCarName(car, carIndex)}:`);
+            lines.push(...carTotals.lines.map((line) => `  ${line}`));
+            lines.push(`  Car total: ${formatMoney(carTotals.total)}`);
+            lines.push("");
+          }
+        });
+
+        grandTotal = total;
+        document.getElementById("total").innerText = total.toLocaleString();
+        document.getElementById("breakdown").innerText = lines.length
+          ? lines.join("\n")
+          : "No items selected";
+
+        document.getElementById("upgradeSubtotal").textContent =
+          formatMoney(currentTotals.upgrades);
+        document.getElementById("partsSubtotal").textContent =
+          formatMoney(currentTotals.parts);
+        document.getElementById("extrasSubtotal").textContent =
+          formatMoney(currentTotals.extras);
+
+        syncRowUI();
+        renderCarSwitcher();
+        saveState();
+      }
+
+      function resetAll() {
+        if (!confirm("Reset all cars and selections?")) return;
+
+        cars.length = 0;
+        cars.push(defaultCar());
+        currentCar = 0;
+        grandTotal = 0;
+        activeTab = "upgradesTab";
+        loadCarToUI(0);
+        setActiveTab("upgradesTab");
+        renderCarSwitcher();
+        calculate();
+        showToast("Reset complete");
+      }
+
+      function buildInvoiceText() {
+        const now = new Date();
+        const stamp = now.toLocaleString("en-GB", {
+          dateStyle: "medium",
+          timeStyle: "short",
+        });
+
+        const out = [];
+        out.push("Harmony Garage Invoice");
+        out.push(`Generated: ${stamp}`);
+        out.push("");
+
+        cars.forEach((car, index) => {
+          const totals = getCarTotals(car);
+          if (!totals.lines.length) return;
+
+          out.push(`${getCarName(car, index)}:`);
+          totals.lines.forEach((line) => {
+            out.push(`- ${line}`);
+          });
+          out.push(`Car subtotal: ${formatMoney(totals.total)}`);
+          out.push("");
+        });
+
+        out.push(`Grand total: ${formatMoney(grandTotal)}`);
+        return out.join("\n");
+      }
+
+      function legacyCopyText(text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        textarea.style.pointerEvents = "none";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+
+        try {
+          return document.execCommand("copy");
+        } finally {
+          textarea.remove();
+        }
+      }
+
+      async function copySummary() {
+        const text = buildInvoiceText();
+
+        try {
+          if (window.isSecureContext && navigator.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
+          } else if (!legacyCopyText(text)) {
+            throw new Error("Legacy copy failed");
+          }
+          showToast("Summary copied");
+        } catch {
+          showToast("Copy failed");
+        }
+      }
+
+      document.addEventListener("change", (e) => {
+        if (e.target.classList.contains("part")) {
+          const idx = Number(e.target.dataset.index);
+          const qtyInput = document.querySelector(
+            `.qty[data-index='${idx}']`
+          );
+          qtyInput.disabled = e.target.value === "none";
+          if (e.target.value === "none") qtyInput.value = 1;
+        }
+
+        calculate();
+      });
+
+      document.addEventListener("click", (e) => {
+        const toggle = e.target.closest(".extraSelect");
+        if (!toggle) return;
+
+        const idx = Number(toggle.dataset.index);
+        const isActive = toggle.getAttribute("aria-pressed") === "true";
+        const nextActive = !isActive;
+        const qtyInput = document.querySelector(
+          `.extraQty[data-index='${idx}']`
+        );
+
+        toggle.setAttribute("aria-pressed", String(nextActive));
+        toggle.classList.toggle("active", nextActive);
+        qtyInput.disabled = !nextActive;
+
+        if (!nextActive) qtyInput.value = 1;
+
+        calculate();
+      });
+
+      document.addEventListener("input", () => {
+        calculate();
+      });
+
+      document.getElementById("carName").addEventListener("input", () => {
+        cars[currentCar].name = document.getElementById("carName").value.trim();
+        renderCarSwitcher();
+        saveState();
+      });
+
+      loadState();
+      loadCarToUI(currentCar);
+      setActiveTab(activeTab);
+      renderCarSwitcher();
+      calculate();
+    </script>
+  </body>
+</html>
