@@ -1,0 +1,12 @@
+name = "garage-prices-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+account_id = "75344d02313078441a86ad4f91704aee"
+
+[[d1_databases]]
+binding = "PRICES_DB"
+database_name = "garage_prices"
+
+[vars]
+# Set an ADMIN_SECRET for simple admin protection. You'll set this with Wrangler secrets
+ADMIN_SECRET = "__SET_ME_IN_WRANGLER__"

@@ -780,7 +780,7 @@
     <script>
       const STORAGE_KEY = "harmonyGarageBilling.v4";
 
-      const basePrices = {
+      let basePrices = {
         S: {
           "Tier 1": 12850,
           "Tier 2": 14950,
@@ -813,7 +813,7 @@
         },
       };
 
-      const partPrices = {
+      let partPrices = {
         Hoods: { S: 700, A: 600, B: 500, C: 400, D: 300 },
         "Roll Cage": { S: 800, A: 700, B: 600, C: 500, D: 400 },
         Exhaust: { S: 900, A: 800, B: 700, C: 600, D: 500 },
@@ -828,7 +828,7 @@
         Roof: { S: 700, A: 600, B: 500, C: 400, D: 300 },
       };
 
-      const partsList = [
+      let partsList = [
         "Hoods",
         "Roll Cage",
         "Exhaust",
@@ -843,7 +843,7 @@
         "Roof",
       ];
 
-      const extrasList = [
+      let extrasList = [
         { name: "Full Service Repair", price: 1000 },
         { name: "Cleaning kits (5 for $1,000)", price: 1000 },
         { name: "Window tint", price: 200 },
@@ -854,6 +854,103 @@
         { name: "Plates", price: 100 },
         { name: "Race Harnesses", price: 7000 },
       ];
+
+      // Render helpers so we can update the DOM if server prices change
+      function renderParts() {
+        const partsDiv = document.getElementById("parts");
+        partsDiv.innerHTML = "";
+
+        partsList.forEach((part, index) => {
+          const div = document.createElement("div");
+          div.className = "itemRow partRow";
+          div.dataset.index = index;
+
+          div.innerHTML = `
+          <div class="rowInfo nameBox">
+            <div class="rowInfoHeader">
+              <strong>${part}</strong>
+              <span class="priceChip partPrice" data-index="${index}">
+                Select class above
+              </span>
+            </div>
+            <small>Use the shared class above, then choose a quantity</small>
+          </div>
+
+          <div class="controlGrid partControls">
+            <div class="field">
+              <select class="qty" data-index="${index}" aria-label="Part quantity" disabled>
+                ${qtyOptions(0, true)}
+              </select>
+            </div>
+          </div>
+        `;
+
+          partsDiv.appendChild(div);
+        });
+      }
+
+      function renderExtras() {
+        const extrasDiv = document.getElementById("extras");
+        extrasDiv.innerHTML = "";
+
+        extrasList.forEach((extra, index) => {
+          const div = document.createElement("div");
+          div.className = "itemRow extraRow";
+          div.dataset.index = index;
+
+          div.innerHTML = `
+          <div class="rowInfo nameBox">
+            <button
+              type="button"
+              class="extraSelect"
+              data-index="${index}"
+              data-name="${extra.name}"
+              aria-pressed="false"
+            >
+              <span class="extraSelectTitle">
+                <strong>${extra.name}</strong>
+                <span class="priceChip">
+                  ${formatMoney(extra.price)} each
+                </span>
+              </span>
+            </button>
+          </div>
+
+          <div class="controlGrid extraControls">
+            <div class="field extraQtyWrap">
+              <select class="extraQty" data-index="${index}" aria-label="Extra quantity" disabled>
+                ${qtyOptions(1)}
+              </select>
+            </div>
+          </div>
+        `;
+
+          extrasDiv.appendChild(div);
+        });
+      }
+
+      async function tryFetchServerPrices() {
+        try {
+          const res = await fetch('/api/prices', { cache: 'no-store' });
+          if (!res.ok) throw new Error('no prices');
+          const data = await res.json();
+
+          if (data.basePrices) basePrices = data.basePrices;
+          if (data.partPrices) partPrices = data.partPrices;
+          if (data.partsList) partsList = data.partsList;
+          if (data.extrasList) extrasList = data.extrasList;
+
+          // Rebuild parts and extras UI with server-supplied lists/prices
+          renderParts();
+          renderExtras();
+          showToast('Prices loaded from server');
+          calculate();
+        } catch (err) {
+          // Keep embedded defaults, silently continue
+          console.warn('Failed to fetch server prices:', err);
+          showToast('Using local prices');
+        }
+      }
 
       function formatMoney(value) {
         return `$${Number(value || 0).toLocaleString()}`;

@@ -1,0 +1,140 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin - Update Prices</title>
+    <style>body{font-family:Inter,system-ui,Arial;padding:18px;background:#0b1220;color:#e5e7eb}textarea{width:100%;height:320px;background:#071022;color:#e5e7eb;border:1px solid #223}</style>
+  </head>
+  <body>
+    <h2>Update Prices</h2>
+    <p>Paste the full prices JSON and click <strong>Save</strong>. Protect this page with Cloudflare Access or keep the admin secret safe.</p>
+
+    <label>Admin secret (x-admin-secret)</label>
+    <input id="secret" style="width:100%;margin-bottom:8px" />
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start">
+      <div>
+        <label>Current prices (read-only)</label>
+        <textarea id="currentJson" readonly style="height:280px"></textarea>
+      </div>
+
+      <div>
+        <label>Edited prices (paste/modify)</label>
+        <textarea id="json" style="height:280px">{}</textarea>
+      </div>
+    </div>
+
+    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+      <button id="save" disabled>Save</button>
+      <button id="load">Load current</button>
+      <div id="msg" style="margin-left:12px"></div>
+    </div>
+
+    <h4>Changes</h4>
+    <div id="changes" style="background:#071022;border:1px solid #223;padding:8px;border-radius:6px;min-height:40px;color:#cbd5f5"></div>
+
+    <script>
+      const msg = document.getElementById('msg');
+      const currentJson = document.getElementById('currentJson');
+      const editedJson = document.getElementById('json');
+      const changesBox = document.getElementById('changes');
+      const saveBtn = document.getElementById('save');
+
+      function tryParse(text) {
+        try { return { ok: true, v: JSON.parse(text) }; } catch (e) { return { ok: false, err: e }; }
+      }
+
+      function deepDiff(a, b, path = '') {
+        const out = [];
+        if (a === b) return out;
+        if (typeof a !== 'object' || a === null || typeof b !== 'object' || b === null) {
+          out.push(`${path || '(root)'} changed`);
+          return out;
+        }
+
+        const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+        for (const k of keys) {
+          const ka = a[k];
+          const kb = b[k];
+          const p = path ? `${path}.${k}` : k;
+          if (typeof ka === 'object' && ka !== null && typeof kb === 'object' && kb !== null) {
+            out.push(...deepDiff(ka, kb, p));
+          } else if (JSON.stringify(ka) !== JSON.stringify(kb)) {
+            out.push(p);
+          }
+        }
+        return out;
+      }
+
+      async function loadCurrent() {
+        msg.textContent = 'Loading...';
+        try {
+          const res = await fetch('/api/prices');
+          if (!res.ok) throw new Error('load failed');
+          const data = await res.json();
+          const pretty = JSON.stringify(data, null, 2);
+          currentJson.value = pretty;
+          if (!editedJson.dataset.touched) editedJson.value = pretty;
+          msg.textContent = '';
+          computeChanges();
+        } catch (e) { msg.textContent = 'Load failed'; }
+      }
+
+      function computeChanges() {
+        const cur = tryParse(currentJson.value);
+        const edt = tryParse(editedJson.value);
+
+        if (!edt.ok) {
+          changesBox.textContent = 'Edited JSON is invalid';
+          saveBtn.disabled = true;
+          return;
+        }
+
+        if (!cur.ok) {
+          changesBox.textContent = 'Current JSON invalid (server)';
+          saveBtn.disabled = false;
+          return;
+        }
+
+        const diffs = deepDiff(cur.v, edt.v);
+        if (diffs.length === 0) {
+          changesBox.textContent = 'No changes detected';
+          saveBtn.disabled = true;
+        } else {
+          changesBox.innerHTML = diffs.map(d => `&bull; ${d}`).join('<br>');
+          saveBtn.disabled = false;
+        }
+      }
+
+      editedJson.addEventListener('input', () => {
+        editedJson.dataset.touched = '1';
+        computeChanges();
+      });
+
+      document.getElementById('load').addEventListener('click', loadCurrent);
+
+      saveBtn.addEventListener('click', async () => {
+        const secret = document.getElementById('secret').value.trim();
+        const parsed = tryParse(editedJson.value);
+        if (!parsed.ok) { msg.textContent = 'Invalid JSON'; return; }
+        msg.textContent = 'Saving...';
+        try {
+          const res = await fetch('/api/prices', { method: 'PUT', headers: { 'Content-Type': 'application/json', 'x-admin-secret': secret }, body: JSON.stringify(parsed.v) });
+          if (res.ok) {
+            msg.textContent = 'Saved';
+            currentJson.value = JSON.stringify(parsed.v, null, 2);
+            editedJson.dataset.touched = '';
+            computeChanges();
+          } else {
+            const j = await res.json().catch(()=>null);
+            msg.textContent = j?.error || 'Save failed';
+          }
+        } catch (e) { msg.textContent = 'Save failed'; }
+      });
+
+      // initial load
+      loadCurrent();
+    </script>
+  </body>
+</html>
